@@ -838,9 +838,9 @@ timelineItems.forEach(item => {
     .lc-ring{ position:absolute; top:50%; left:50%; border-radius:50%; border:1px dashed var(--hairline); transform:translate(-50%,-50%); pointer-events:none;}
     .lc-center{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border-radius:50%; background:var(--white); box-shadow:0 2px 16px rgba(152,206,200,0.4), 0 0 0 1px var(--hairline) inset; display:flex; align-items:center; justify-content:center; padding:10%; z-index:5;}
     .lc-center img{ width:100%; height:100%; object-fit:contain; }
-    .lc-avatar{ position:absolute; top:50%; left:50%; cursor:pointer; user-select:none; z-index:10; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--mint); color:var(--charcoal-dark); font-family:'Montserrat',sans-serif; font-weight:700; border-style:solid; border-color:var(--hairline); transition:box-shadow .25s, transform .25s; box-shadow:0 2px 8px rgba(77,77,77,0.10);}
+    .lc-avatar{ position:absolute; top:50%; left:50%; cursor:pointer; user-select:none; z-index:10; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--mint); color:var(--charcoal-dark); font-family:'Montserrat',sans-serif; font-weight:700; border-style:solid; border-color:var(--hairline); transition:box-shadow .25s; box-shadow:0 2px 8px rgba(77,77,77,0.10);}
     .lc-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .lc-avatar:hover{ box-shadow:0 0 0 5px rgba(152,206,200,0.35); transform:translate(-50%,-50%) scale(1.08) !important; }
+    .lc-avatar:hover{ box-shadow:0 0 0 5px rgba(152,206,200,0.35); }
     .lc-avatar.active{ box-shadow:0 0 0 6px rgba(152,206,200,0.55) !important; }
     .lc-avatar.dimmed{ opacity:0.28; }
     .lc-bucket-csuite{ border-color:var(--teal); } .lc-bucket-operations{ border-color:var(--p-morningglory); }
@@ -903,11 +903,15 @@ timelineItems.forEach(item => {
     } else { el.textContent = p.initials; }
     const dot = document.createElement('span'); dot.className = 'lc-status-dot ' + dotClass(p.status); el.appendChild(dot);
     el.addEventListener('click', () => select(p.id));
+    el.addEventListener('mouseenter', () => setHovering(true));
+    el.addEventListener('mouseleave', () => setHovering(false));
     return el;
   }
   function makeLabel(p){
     const el = document.createElement('div'); el.className = 'lc-label'; el.dataset.id = p.id; el.textContent = p.first;
     el.addEventListener('click', () => select(p.id));
+    el.addEventListener('mouseenter', () => setHovering(true));
+    el.addEventListener('mouseleave', () => setHovering(false));
     return el;
   }
 
@@ -980,7 +984,10 @@ timelineItems.forEach(item => {
 
   let vpRot = 0, dmRot = 0;
   const VP_SPEED = 0.00009, DM_SPEED = -0.00006;
-  let lastT = null, paused = false;
+  let lastT = null;
+  let hovering = false, selectedActive = false, paused = false;
+  function updatePaused(){ paused = hovering || selectedActive; }
+  function setHovering(v){ hovering = v; updatePaused(); }
   function animate(t){
     if (lastT === null) lastT = t;
     const dt = t - lastT; lastT = t;
@@ -1006,7 +1013,7 @@ timelineItems.forEach(item => {
   function allEls(){ return [...csuiteEls, ...vpEls, ...dmEls].flatMap(e => [e.avatar, e.label]); }
   const TIER_LABEL = { csuite:"C-Suite", vp:"Vice President", dm:"Director / Manager" };
   function select(id){
-    paused = true;
+    selectedActive = true; updatePaused();
     const p = PEOPLE.find(x => x.id === id);
     allEls().forEach(el => { el.classList.toggle('active', el.dataset.id === id); el.classList.toggle('dimmed', el.dataset.id !== id); });
     const meta = STATUS_META[p.status] || STATUS_META["not-sent"];
@@ -1022,7 +1029,7 @@ timelineItems.forEach(item => {
     panel.classList.add('open'); scrim.classList.add('open');
   }
   function clearSel(){
-    paused = false;
+    selectedActive = false; updatePaused();
     allEls().forEach(el => { el.classList.remove('active'); el.classList.remove('dimmed'); });
     panel.classList.remove('open'); scrim.classList.remove('open');
   }
